@@ -157,17 +157,29 @@ class Assign < Struct.new(:name, :expression)
   end
 end
 
+class If < Struct.new(:condition, :consequence, :alternative)
+  def to_s
+    "if (#{condition}) { #{consequence} } else { #{alternative} }"
+  end
 
-# p expression =
-#   Add.new(
-#     Multiply.new(Number.new(1), Number.new(2)),
-#     Multiply.new(Number.new(3), Number.new(4))
-#   )
+  def inspect
+    "<<#{self}>>"
+  end
 
-# p expression.reducible?
-# p expression = expression.reduce
-# p expression.reducible?
-# p expression = expression.reduce
-# p expression.reducible?
-# p expression = expression.reduce
-# p expression.reducible?
+  def reducible?
+    true
+  end
+
+  def reduce(environment)
+    if condition.reducible?
+      [If.new(condition.reduce(environment), consequence, alternative), environment]
+    else
+      case condition
+      when Boolean.new(true)
+        [consequence, environment]
+      when Boolean.new(false)
+        [alternative, environment]
+      end
+    end
+  end
+end
