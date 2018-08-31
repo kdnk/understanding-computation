@@ -1,29 +1,20 @@
 require './02/simple.rb'
 
-class Machine < Struct.new(:expression)
+class Machine < Struct.new(:statement, :environment)
   def step
-    self.expression = expression.reduce
+    self.statement, self.environment = statement.reduce(environment)
   end
 
   def run
-    while expression.reducible?
-      puts expression
+    while statement.reducible?
+      puts "#{statement}, #{environment}"
       step
     end
-    puts expression
+    puts "#{statement}, #{environment}"
   end
 end
 
 Machine.new(
-  Add.new(
-    Multiply.new(Number.new(1), Number.new(2)),
-    Multiply.new(Number.new(3), Number.new(4)),
-  )
-).run
-
-Machine.new(
-  LessThan.new(
-    Number.new(5),
-    Add.new(Number.new(2), Number.new(2))
-  )
+  Assign.new(:x, Add.new(Variable.new(:x), Number.new(1))),
+  { x: Number.new(2) }
 ).run
