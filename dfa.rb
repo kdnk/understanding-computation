@@ -8,16 +8,17 @@ class FARule < Struct.new(:state, :character, :next_state)
   end
 
   def inspect
-    "#<FARule #{state.inspect} --#{character}--> #{next_state.inspect} >"
+    "< FARule #{state.inspect} --#{character}--> #{next_state.inspect} >"
   end
 end
 
 class DFARulebook < Struct.new(:rules)
   def next_state(state, character)
-    rules_for(state, character).follow
+    rule = rule_for(state, character)
+    rule.follow
   end
 
-  def rules_for(state, character)
+  def rule_for(state, character)
     rules.detect { |rule| rule.applies_to?(state, character) }
   end
 end
@@ -38,6 +39,22 @@ class DFA < Struct.new(:current_state, :accept_states, :rulebook)
   end
 end
 
+rules = [
+  FARule.new(1, 'b', 1),
+  FARule.new(1, 'a', 2),
+  FARule.new(2, 'a', 2),
+  FARule.new(2, 'b', 3),
+  FARule.new(3, 'a', 3),
+  FARule.new(3, 'b', 3),
+]
+rulebook = DFARulebook.new(rules)
+
+dfa = DFA.new(1, [3], rulebook)
+p dfa.accepting?
+dfa.read_string('baaab')
+p dfa.accepting?
+
+
 class DFADesign < Struct.new(:start_state, :accept_states, :rulebook)
   def to_dfa
     DFA.new(start_state, accept_states, rulebook)
@@ -47,30 +64,3 @@ class DFADesign < Struct.new(:start_state, :accept_states, :rulebook)
     to_dfa.tap { |dfa| dfa.read_string(string) }.accepting?
   end
 end
-
-rulebook = DFARulebook.new([
-  FARule.new(1, 'a', 2), FARule.new(1, 'b', 1),
-  FARule.new(2, 'a', 2), FARule.new(2, 'b', 3),
-  FARule.new(3, 'a', 3), FARule.new(3, 'b', 3)
-])
-
-p rulebook.next_state(1, 'a')
-p rulebook.next_state(1, 'b')
-p rulebook.next_state(2, 'b')
-
-dfa = DFA.new(1, [3], rulebook); p dfa.accepting?
-dfa.read_character('b'); p dfa.accepting?
-dfa.read_character('a'); p dfa.accepting?
-dfa.read_character('a'); p dfa.accepting?
-dfa.read_character('b'); p dfa.accepting?
-
-dfa = DFA.new(1, [3], rulebook); p dfa.accepting?
-
-dfa.read_string('baaab'); p dfa.accepting?
-
-dfa_design = DFADesign.new(1, [3], rulebook)
-puts
-p dfa_design.accepts?('a')
-p dfa_design.accepts?('ab')
-p dfa_design.accepts?('ba')
-p dfa_design.accepts?('aaaba')
